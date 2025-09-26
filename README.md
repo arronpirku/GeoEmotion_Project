@@ -1,4 +1,4 @@
-Lightweight Emotion Detection with DistilBERT, ALBERT, and ModernBERT
+**Lightweight Emotion Detection with DistilBERT, ALBERT, and ModernBERT**
 
 This project explores lightweight emotion detection on the GoEmotions dataset
 . The goal is to establish baselines with efficient transformer models (DistilBERT, ALBERT, ModernBERT), then apply compression and lightweighting techniques like knowledge distillation and quantization.
