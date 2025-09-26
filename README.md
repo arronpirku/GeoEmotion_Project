@@ -1,44 +1,39 @@
-**Lightweight Emotion Detection with DistilBERT, ALBERT, and ModernBERT**
+# Lightweight Emotion Detection with DistilBERT, ALBERT, and ModernBERT
 
-This project explores lightweight emotion detection on the GoEmotions dataset
-. The goal is to establish baselines with efficient transformer models (DistilBERT, ALBERT, ModernBERT), then apply compression and lightweighting techniques like knowledge distillation and quantization.
+This project explores **lightweight emotion detection** on the [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions).  
+The focus is on efficient transformer models (DistilBERT, ALBERT, ModernBERT) and preparing the ground for compression methods like **knowledge distillation** and **quantization**.
 
-Features Implemented
+---
 
-GoEmotions dataset integration
+##  Features
 
-Supports both raw (27 emotions + neutral) and simplified (6 emotions + neutral) configurations.
+- **Dataset handling**
+  - Supports both `raw` (27 emotions + neutral) and `simplified` (6 emotions + neutral) configs.
+  - Auto-creates a validation split if one is missing.
+  - Works with both schema variants:
+    - `labels` column (list of label IDs per sample).
+    - Wide schema (binary column for each emotion).
 
-Auto-creates a validation split if missing.
+- **Baseline models**
+  - [`distilbert-base-uncased`](https://huggingface.co/distilbert-base-uncased)  
+  - [`albert-base-v2`](https://huggingface.co/albert-base-v2)  
+  - [`answerdotai/ModernBERT-base`](https://huggingface.co/answerdotai/ModernBERT-base)
 
-Handles both schema variants:
+- **Training pipeline**
+  - Hugging Face `Trainer` for multi-label classification (`problem_type="multi_label_classification"`).
+  - Configurable hyperparameters: epochs, batch size, learning rate, max length.
+  - Evaluates micro, macro, and weighted F1.
 
-list of label IDs (labels)
+- **Evaluation & Reporting**
+  - `metrics.json` → validation/test F1 and losses.
+  - `classification_report.json` → per-emotion precision/recall/F1.
+  - `efficiency_snapshot.json` → trainable params + latency probe.
+  - `make_report.py` → generates a polished PDF report with tables, efficiency snapshot, and per-label F1 charts.
 
-wide one-hot columns (one binary column per emotion).
+---
 
-Baseline models
+##  Usage
 
-distilbert-base-uncased
-
-albert-base-v2
-
-answerdotai/ModernBERT-base
-
-Training pipeline
-
-Hugging Face Trainer with multi-label classification (problem_type="multi_label_classification").
-
-Configurable hyperparameters (epochs, batch size, learning rate, max sequence length).
-
-Computes micro/macro/weighted F1 scores.
-
-Evaluation & Reporting
-
-Saves metrics.json (val/test F1 + losses).
-
-Saves classification_report.json (per-emotion precision/recall/F1).
-
-Logs efficiency_snapshot.json (trainable params + inference latency).
-
-Includes a PDF report generator (make_report.py) that summarizes results, metrics tables, efficiency snapshot, and per-label F1 charts.
+### Install dependencies
+```bash
+pip install torch transformers datasets scikit-learn reportlab matplotlib pandas
