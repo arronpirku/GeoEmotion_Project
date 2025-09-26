@@ -30,10 +30,6 @@ The focus is on efficient transformer models (DistilBERT, ALBERT, ModernBERT) an
   - `efficiency_snapshot.json` → trainable params + latency probe.
   - `make_report.py` → generates a polished PDF report with tables, efficiency snapshot, and per-label F1 charts.
 
----
 
-##  Usage
 
-### Install dependencies
-```bash
-pip install torch transformers datasets scikit-learn reportlab matplotlib pandas
+
