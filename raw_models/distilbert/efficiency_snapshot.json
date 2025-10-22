@@ -1,0 +1,5 @@
+{
+  "trainable_params": 66975004,
+  "avg_latency_ms_per_batch32_cpu": 278.3419370651245,
+  "avg_latency_ms_per_batch32_gpu": 12.776684761047363
+}

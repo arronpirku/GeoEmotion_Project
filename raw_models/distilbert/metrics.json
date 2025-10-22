@@ -1,0 +1,71 @@
+{
+  "train": {
+    "train_runtime": 3183.9436,
+    "train_samples_per_second": 179.119,
+    "train_steps_per_second": 5.598,
+    "total_flos": 5938392791853312.0,
+    "train_loss": 0.10989215188988771,
+    "epoch": 3.0
+  },
+  "val": {
+    "eval_loss": 0.10996390879154205,
+    "eval_f1_micro": 0.37341490545050054,
+    "eval_f1_macro": 0.2878418454396335,
+    "eval_f1_weighted": 0.3410629530745908,
+    "eval_runtime": 26.0394,
+    "eval_samples_per_second": 811.195,
+    "eval_steps_per_second": 25.385,
+    "epoch": 3.0
+  },
+  "test": {
+    "eval_loss": 0.10996390879154205,
+    "eval_f1_micro": 0.37341490545050054,
+    "eval_f1_macro": 0.2878418454396335,
+    "eval_f1_weighted": 0.3410629530745908,
+    "eval_runtime": 26.8396,
+    "eval_samples_per_second": 787.01,
+    "eval_steps_per_second": 24.628,
+    "epoch": 3.0
+  },
+  "label_names": [
+    "admiration",
+    "amusement",
+    "anger",
+    "annoyance",
+    "approval",
+    "caring",
+    "confusion",
+    "curiosity",
+    "desire",
+    "disappointment",
+    "disapproval",
+    "disgust",
+    "embarrassment",
+    "excitement",
+    "fear",
+    "gratitude",
+    "grief",
+    "joy",
+    "love",
+    "nervousness",
+    "optimism",
+    "pride",
+    "realization",
+    "relief",
+    "remorse",
+    "sadness",
+    "surprise",
+    "neutral"
+  ],
+  "args": {
+    "model_name": "distilbert-base-uncased",
+    "dataset_name": "go_emotions",
+    "dataset_config": "raw",
+    "max_length": 128,
+    "batch_size": 32,
+    "epochs": 3,
+    "lr": 5e-05,
+    "weight_decay": 0.01,
+    "seed": 42
+  }
+}
