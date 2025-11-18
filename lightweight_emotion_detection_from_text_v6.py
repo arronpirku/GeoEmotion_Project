@@ -76,6 +76,8 @@ RUN_QUANTIZATION = False    # <<< CHANGE TO TRUE when all training has been done
 
 GENERATE_FINAL_REPORT = False
 
+EXPORT_FOR_GIT = False
+
 # ---- Standard imports ----
 import os
 import random
@@ -3951,3 +3953,194 @@ if not SMOKE_TEST:
   fig.show()
 
   print("🎉 Interactive HPO Dashboard Ready.")
+
+
+
+
+
+
+
+
+
+
+
+if EXPORT_FOR_GIT:
+  import os
+  import shutil
+  import json
+  from pathlib import Path
+
+  # ==========================================
+  # CONFIG — hálózati mappa, ahonnan exportálunk
+  # ==========================================
+  PROJECT_ROOT = "/content/drive/MyDrive/emotion_project/full"
+  FINAL_MODELS = f"{PROJECT_ROOT}/final_models"
+  PLOTS_DIR = f"{FINAL_MODELS}/plots"
+
+  EXPORT_DIR = "/content/emotion_project_github_export"
+  shutil.rmtree(EXPORT_DIR, ignore_errors=True)
+  os.makedirs(EXPORT_DIR, exist_ok=True)
+
+  print("📁 Export directory created:", EXPORT_DIR)
+
+
+  # ============================================================
+  # 1) NOTEBOOKOK exportálása
+  # ============================================================
+  def export_notebooks():
+      nb_dir = "/content"
+      export_nb_dir = f"{EXPORT_DIR}/notebooks"
+      os.makedirs(export_nb_dir, exist_ok=True)
+
+      for nb in os.listdir(nb_dir):
+          if nb.endswith(".ipynb"):
+              shutil.copy(f"{nb_dir}/{nb}", f"{export_nb_dir}/{nb}")
+              print("✔ Notebook exported:", nb)
+
+
+  # ============================================================
+  # 2) CONFIG fájlok exportálása
+  # ============================================================
+  def export_configs():
+      config_dir = f"{EXPORT_DIR}/configs"
+      os.makedirs(config_dir, exist_ok=True)
+
+      possible_configs = [
+          "hpo_grid.json",
+          "base_models.json",
+          "label_info_raw.json",
+          "label_info_simplified.json",
+      ]
+
+      for conf in possible_configs:
+          full_path = f"{PROJECT_ROOT}/{conf}"
+          if os.path.exists(full_path):
+              shutil.copy(full_path, config_dir)
+              print("✔ Config exported:", conf)
+
+
+  # ============================================================
+  # 3) SUMMARY fájlok exportja (kicsik, fontosak)
+  # ============================================================
+  def export_summaries():
+      summary_dir = f"{EXPORT_DIR}/results"
+      os.makedirs(summary_dir, exist_ok=True)
+
+      for root, dirs, files in os.walk(FINAL_MODELS):
+          for file in files:
+              if file in ["training_summary.json", "quantization_summary.json"]:
+                  src = os.path.join(root, file)
+
+                  # output struktúra: results/<model>/<file>.json
+                  rel = root.replace(FINAL_MODELS, "").strip("/")
+                  tgt_dir = os.path.join(summary_dir, rel)
+                  os.makedirs(tgt_dir, exist_ok=True)
+
+                  shutil.copy(src, f"{tgt_dir}/{file}")
+                  print("✔ Summary exported:", src)
+
+
+  # ============================================================
+  # 4) PLOTOK exportálása
+  # ============================================================
+  def export_plots():
+      if not os.path.exists(PLOTS_DIR):
+          print("⚠ No plots directory found:", PLOTS_DIR)
+          return
+
+      plot_export = f"{EXPORT_DIR}/results/plots"
+      shutil.copytree(PLOTS_DIR, plot_export)
+      print("✔ Plot directory exported")
+
+
+  # ============================================================
+  # 5) .gitignore generálás
+  # ============================================================
+  def export_gitignore():
+      gitignore_path = f"{EXPORT_DIR}/.gitignore"
+      gitignore_content = """
+  # Model checkpoints (too large for GitHub)
+  **/checkpoint-*/
+  **/*.bin
+  **/*.safetensors
+  **/optimizer.pt
+  **/scheduler.pt
+  **/rng_state.pth
+  **/training_args.bin
+
+  # Tokenized dataset
+  tokenized/
+  **/*.arrow
+
+  # HuggingFace cache
+  ~/.cache/huggingface
+
+  # Python cache
+  __pycache__/
+  *.pyc
+
+  # Colab
+  *.ipynb_checkpoints/
+      """.strip()
+
+      with open(gitignore_path, "w") as f:
+          f.write(gitignore_content)
+      print("✔ .gitignore created")
+
+
+  # ============================================================
+  # 6) README generálás
+  # ============================================================
+  def export_readme():
+      readme_path = f"{EXPORT_DIR}/README.md"
+      readme = """
+  # Emotion Classification Project — GitHub Export
+
+  This export contains only the *lightweight, GitHub-safe* files:
+  - training summaries
+  - quantization summaries
+  - HPO results and plots
+  - all configs (HPO grid, label mappings)
+  - notebooks
+
+  Model weights and checkpoints are intentionally excluded.
+
+  To fully reproduce the project, place your model directories into:
+
+  final_models/<model_name>/
+
+  And run the provided notebooks.
+
+  ---
+  Generated automatically by the GitHub export tool.
+      """.strip()
+
+      with open(readme_path, "w") as f:
+          f.write(readme)
+
+      print("✔ README.md created")
+
+
+  # ============================================================
+  # 7) ZIP készítése
+  # ============================================================
+  def create_zip():
+      zip_path = "/content/emotion_project_github_export.zip"
+      shutil.make_archive("/content/emotion_project_github_export", "zip", EXPORT_DIR)
+      print("\n📦 ZIP GENERATED:", zip_path)
+      return zip_path
+
+
+  # =========================
+  # RUN ALL EXPORT STEPS
+  # =========================
+  export_notebooks()
+  export_configs()
+  export_summaries()
+  export_plots()
+  export_gitignore()
+  export_readme()
+
+  zip_path = create_zip()
+
+  zip_path
