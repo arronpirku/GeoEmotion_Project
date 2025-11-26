@@ -67,9 +67,9 @@ RAW_CONFIG_NAME = "raw"
 SIMPLIFIED_CONFIG_NAME = "simplified"
 
 BASE_MODELS = [
-    {"name": "nreimers/MiniLM-L6-H384-uncased", "hpo": False, "hpo_mode": RAW_CONFIG_NAME, "train": False, "train_mode": RAW_CONFIG_NAME},
-    {"name": "google/electra-small-discriminator", "hpo": False, "hpo_mode": RAW_CONFIG_NAME, "train": False, "train_mode": RAW_CONFIG_NAME},
-    {"name": "roberta-base", "hpo": True, "hpo_mode": RAW_CONFIG_NAME, "train": True, "train_mode": SIMPLIFIED_CONFIG_NAME},
+    {"name": "nreimers/MiniLM-L6-H384-uncased", "hpo": True, "hpo_mode": RAW_CONFIG_NAME, "train": False, "train_mode": RAW_CONFIG_NAME},
+    {"name": "google/electra-small-discriminator", "hpo": True, "hpo_mode": RAW_CONFIG_NAME, "train": False, "train_mode": RAW_CONFIG_NAME},
+    {"name": "roberta-base", "hpo": True, "hpo_mode": RAW_CONFIG_NAME, "train": False, "train_mode": SIMPLIFIED_CONFIG_NAME},
 ]
 
 RUN_QUANTIZATION = True    # <<< CHANGE TO TRUE when all training has been done after all HPO has been done
@@ -2932,152 +2932,156 @@ if not SMOKE_TEST and GENERATE_FINAL_REPORT:
   for m in trained_models:
       print(" -", m)
 
-  # --- ÁLLÍTSD BE ezt: ---
-  model_dir = trained_models[0]   # vagy válaszd ki azt, amelyik érdekel
+  if len(trained_models) > 0:
+    # --- ÁLLÍTSD BE ezt: ---
+    model_dir = trained_models[0]   # vagy válaszd ki azt, amelyik érdekel
 
-  # 3) Keresd meg az összes checkpointot
-  checkpoints = glob.glob(os.path.join(model_dir, "checkpoint-*"))
-  checkpoints = sorted(checkpoints, key=lambda x: int(x.split("-")[-1]))
+    # 3) Keresd meg az összes checkpointot
+    checkpoints = glob.glob(os.path.join(model_dir, "checkpoint-*"))
+    checkpoints = sorted(checkpoints, key=lambda x: int(x.split("-")[-1]))
 
-  if not checkpoints:
-      raise ValueError("No checkpoints found!")
+    if not checkpoints:
+        raise ValueError("No checkpoints found!")
 
-  latest = checkpoints[-1]
-  state_path = os.path.join(latest, "trainer_state.json")
+    latest = checkpoints[-1]
+    state_path = os.path.join(latest, "trainer_state.json")
 
-  print("\nUsing trainer_state from:", state_path)
+    print("\nUsing trainer_state from:", state_path)
 
-  # 4) Load trainer_state.json
-  with open(state_path, "r") as f:
-      state = json.load(f)
+    # 4) Load trainer_state.json
+    with open(state_path, "r") as f:
+        state = json.load(f)
 
-  logs = state["log_history"]
+    logs = state["log_history"]
 
-  # 5) Extract metrics
-  train_loss = []
-  eval_loss = []
-  acc = []
-  psoft = []
-  epochs = []
+    # 5) Extract metrics
+    train_loss = []
+    eval_loss = []
+    acc = []
+    psoft = []
+    epochs = []
 
-  for item in logs:
-      if "loss" in item:
-          train_loss.append(item["loss"])
-      if "eval_loss" in item:
-          eval_loss.append(item["eval_loss"])
-      if "eval_accuracy" in item:
-          acc.append(item["eval_accuracy"])
-      if "eval_plutchik_soft" in item:
-          psoft.append(item["eval_plutchik_soft"])
+    for item in logs:
+        if "loss" in item:
+            train_loss.append(item["loss"])
+        if "eval_loss" in item:
+            eval_loss.append(item["eval_loss"])
+        if "eval_accuracy" in item:
+            acc.append(item["eval_accuracy"])
+        if "eval_plutchik_soft" in item:
+            psoft.append(item["eval_plutchik_soft"])
 
-  # 6) Plot curves
-  plt.figure(figsize=(10,5))
-  plt.plot(train_loss, label="Train Loss")
-  plt.plot(eval_loss, label="Eval Loss")
-  plt.title("Loss Curves")
-  plt.xlabel("Eval Step")
-  plt.ylabel("Loss")
-  plt.legend()
-  plt.show()
+    # 6) Plot curves
+    plt.figure(figsize=(10,5))
+    plt.plot(train_loss, label="Train Loss")
+    plt.plot(eval_loss, label="Eval Loss")
+    plt.title("Loss Curves")
+    plt.xlabel("Eval Step")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.show()
 
-  plt.figure(figsize=(10,5))
-  plt.plot(acc, label="Accuracy")
-  plt.plot(psoft, label="Plutchik Soft")
-  plt.title("Evaluation Metrics")
-  plt.xlabel("Eval Step")
-  plt.ylabel("Score")
-  plt.legend()
-  plt.show()
-
-
-
+    plt.figure(figsize=(10,5))
+    plt.plot(acc, label="Accuracy")
+    plt.plot(psoft, label="Plutchik Soft")
+    plt.title("Evaluation Metrics")
+    plt.xlabel("Eval Step")
+    plt.ylabel("Score")
+    plt.legend()
+    plt.show()
 
 
 
 
-if not SMOKE_TEST and GENERATE_FINAL_REPORT:
-  import os
-  import json
-  import matplotlib.pyplot as plt
-  import numpy as np
 
-  # === LOAD TRAINER STATE ===
-  latest = latest  # ha az előző cellában lefutott, ez már a helyes checkpoint
-  state_path = os.path.join(latest, "trainer_state.json")
 
-  with open(state_path, "r") as f:
-      state = json.load(f)
 
-  logs = state["log_history"]
+try:
+  if not SMOKE_TEST and GENERATE_FINAL_REPORT and latest:
+    import os
+    import json
+    import matplotlib.pyplot as plt
+    import numpy as np
 
-  # === EXTRACT METRICS ===
-  train_loss = []
-  eval_loss = []
-  accuracy = []
-  plutchik = []
-  epochs = []
-  learning_rates = []
+    # === LOAD TRAINER STATE ===
+    latest = latest  # ha az előző cellában lefutott, ez már a helyes checkpoint
+    state_path = os.path.join(latest, "trainer_state.json")
 
-  for item in logs:
-      if "loss" in item:
-          train_loss.append((item["epoch"], item["loss"]))
-      if "eval_loss" in item:
-          eval_loss.append((item["epoch"], item["eval_loss"]))
-      if "eval_accuracy" in item:
-          accuracy.append((item["epoch"], item["eval_accuracy"]))
-      if "eval_plutchik_soft" in item:
-          plutchik.append((item["epoch"], item["eval_plutchik_soft"]))
-      if "learning_rate" in item:
-          learning_rates.append((item["epoch"], item["learning_rate"]))
+    with open(state_path, "r") as f:
+        state = json.load(f)
 
-  # Convert to arrays
-  train_epochs, train_vals = zip(*train_loss)
-  eval_epochs, eval_vals = zip(*eval_loss)
-  acc_epochs, acc_vals = zip(*accuracy)
-  psoft_epochs, psoft_vals = zip(*plutchik)
-  lr_epochs, lr_vals = zip(*learning_rates)
+    logs = state["log_history"]
 
-  # === PLOT ===
-  plt.figure(figsize=(12,4))
-  plt.plot(train_epochs, train_vals, label="Train Loss", alpha=0.6)
-  plt.plot(eval_epochs, eval_vals, label="Eval Loss", linewidth=3)
-  plt.scatter(eval_epochs, eval_vals, color='red', label="Eval Points")
-  plt.title("Train vs Eval Loss (per epoch)")
-  plt.xlabel("Epoch")
-  plt.ylabel("Loss")
-  plt.legend()
-  plt.grid(True)
-  plt.show()
+    # === EXTRACT METRICS ===
+    train_loss = []
+    eval_loss = []
+    accuracy = []
+    plutchik = []
+    epochs = []
+    learning_rates = []
 
-  plt.figure(figsize=(12,4))
-  plt.plot(acc_epochs, acc_vals, label="Accuracy", marker="o")
-  plt.plot(psoft_epochs, psoft_vals, label="Plutchik Soft", marker="o")
-  plt.title("Evaluation Metrics (per epoch)")
-  plt.xlabel("Epoch")
-  plt.ylabel("Score")
-  plt.legend()
-  plt.grid(True)
-  plt.show()
+    for item in logs:
+        if "loss" in item:
+            train_loss.append((item["epoch"], item["loss"]))
+        if "eval_loss" in item:
+            eval_loss.append((item["epoch"], item["eval_loss"]))
+        if "eval_accuracy" in item:
+            accuracy.append((item["epoch"], item["eval_accuracy"]))
+        if "eval_plutchik_soft" in item:
+            plutchik.append((item["epoch"], item["eval_plutchik_soft"]))
+        if "learning_rate" in item:
+            learning_rates.append((item["epoch"], item["learning_rate"]))
 
-  plt.figure(figsize=(12,4))
-  plt.plot(lr_epochs, lr_vals)
-  plt.title("Learning Rate Schedule")
-  plt.xlabel("Epoch")
-  plt.ylabel("Learning Rate")
-  plt.grid(True)
-  plt.show()
+    # Convert to arrays
+    train_epochs, train_vals = zip(*train_loss)
+    eval_epochs, eval_vals = zip(*eval_loss)
+    acc_epochs, acc_vals = zip(*accuracy)
+    psoft_epochs, psoft_vals = zip(*plutchik)
+    lr_epochs, lr_vals = zip(*learning_rates)
 
-  # === SHOW BEST CHECKPOINT INFO ===
-  best_checkpoint = state["best_model_checkpoint"]
-  print("\nBest model checkpoint:", best_checkpoint)
+    # === PLOT ===
+    plt.figure(figsize=(12,4))
+    plt.plot(train_epochs, train_vals, label="Train Loss", alpha=0.6)
+    plt.plot(eval_epochs, eval_vals, label="Eval Loss", linewidth=3)
+    plt.scatter(eval_epochs, eval_vals, color='red', label="Eval Points")
+    plt.title("Train vs Eval Loss (per epoch)")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
-  best_epoch = None
-  for ep, val in zip(psoft_epochs, psoft_vals):
-      if abs(val - max(psoft_vals)) < 1e-6:
-          best_epoch = ep
-          break
+    plt.figure(figsize=(12,4))
+    plt.plot(acc_epochs, acc_vals, label="Accuracy", marker="o")
+    plt.plot(psoft_epochs, psoft_vals, label="Plutchik Soft", marker="o")
+    plt.title("Evaluation Metrics (per epoch)")
+    plt.xlabel("Epoch")
+    plt.ylabel("Score")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
-  print(f"Best Plutchik score at epoch: {best_epoch:.1f}")
+    plt.figure(figsize=(12,4))
+    plt.plot(lr_epochs, lr_vals)
+    plt.title("Learning Rate Schedule")
+    plt.xlabel("Epoch")
+    plt.ylabel("Learning Rate")
+    plt.grid(True)
+    plt.show()
+
+    # === SHOW BEST CHECKPOINT INFO ===
+    best_checkpoint = state["best_model_checkpoint"]
+    print("\nBest model checkpoint:", best_checkpoint)
+
+    best_epoch = None
+    for ep, val in zip(psoft_epochs, psoft_vals):
+        if abs(val - max(psoft_vals)) < 1e-6:
+            best_epoch = ep
+            break
+
+    print(f"Best Plutchik score at epoch: {best_epoch:.1f}")
+except Exception as e:
+    print("ERROR:", e)
 
 
 
@@ -3968,6 +3972,85 @@ if not SMOKE_TEST:
 
 
 
+# ============================================================
+# EXTRA: FULL HPO EXPORT + TOKENIZED DATASET EXPORT
+# ============================================================
+
+def export_hpo_full():
+    """
+    Exportálja az egész TRIALS_DIR struktúrát, minden triallal,
+    minden modellel, RAW + SIMPLIFIED módokkal.
+    """
+    src = TRIALS_DIR
+    dst = f"{EXPORT_DIR}/results/hpo"
+
+    if not os.path.exists(src):
+        print("⚠ HPO directory not found:", src)
+        return
+
+    # A cél mappa újragenerálása
+    shutil.rmtree(dst, ignore_errors=True)
+    shutil.copytree(src, dst)
+
+    print("✔ FULL HPO directory exported:", dst)
+
+def export_hpo_summaries():
+    """
+    Exportálja a HPO futásokhoz tartozó KIS JSON fájlokat:
+    - trial_results.json
+    - hpo_config.json (ha van)
+
+    Minden modellre és mindkét módra (raw / simplified).
+    Nem exportál checkpointokat, optimizer állapotot stb.
+    GitHub-barát!
+    """
+    src = TRIALS_DIR
+    dst = f"{EXPORT_DIR}/results/hpo"
+
+    if not os.path.exists(src):
+        print("⚠ HPO directory not found:", src)
+        return
+
+    # cél mappa újragenerálása
+    shutil.rmtree(dst, ignore_errors=True)
+    os.makedirs(dst, exist_ok=True)
+
+    # végigmegyünk a trials fájlstruktúrán
+    for root, dirs, files in os.walk(src):
+        # csak a kicsi JSON fájlok kellenek
+        json_files = [f for f in files if f in ["trial_results.json", "hpo_config.json"]]
+        if not json_files:
+            continue
+
+        # relatív útvonal megőrzése
+        rel = root.replace(src, "").strip("/")
+        target_dir = os.path.join(dst, rel)
+        os.makedirs(target_dir, exist_ok=True)
+
+        for jf in json_files:
+            shutil.copy(os.path.join(root, jf), os.path.join(target_dir, jf))
+            print("✔ HPO summary exported:", os.path.join(rel, jf))
+
+    print("🎉 HPO summaries successfully exported to:", dst)
+
+def export_tokenized():
+    """
+    Exportálja a teljes tokenized dataset cache-t.
+    Ez nagy lehet, de teljes reprodukcióhoz szükséges.
+    """
+    src = TOKENIZED_DIR
+    dst = f"{EXPORT_DIR}/tokenized"
+
+    if not os.path.exists(src):
+        print("⚠ Tokenized directory not found:", src)
+        return
+
+    # Cél könyvtár újragenerálása
+    shutil.rmtree(dst, ignore_errors=True)
+    shutil.copytree(src, dst)
+
+    print("✔ Tokenized dataset exported:", dst)
+
 if EXPORT_FOR_GIT:
   import os
   import shutil
@@ -4144,6 +4227,9 @@ if EXPORT_FOR_GIT:
   export_plots()
   export_gitignore()
   export_readme()
+  export_hpo_summaries()
+  #export_hpo_full()
+  #export_tokenized()
 
   zip_path = create_zip()
 
